@@ -1,6 +1,8 @@
 import math
 from math import sqrt
 import numbers
+import numpy as np
+
 
 def zeroes(height, width):
         """
@@ -39,7 +41,10 @@ class Matrix(object):
         if self.h > 2:
             raise(NotImplementedError, "Calculating determinant not implemented for matrices largerer than 2x2.")
         
-        # TODO - your code here
+        if len(self) == 1:
+            return self[0][0]
+        else:
+            return self[0][0] * self[1][1] - self[0][1] * self[1][0]
 
     def trace(self):
         """
@@ -47,8 +52,14 @@ class Matrix(object):
         """
         if not self.is_square():
             raise(ValueError, "Cannot calculate the trace of a non-square matrix.")
+        sum = 0
+        for i in range(len(self)):
+            for j in range(len(self[0])):
+                if(i == j):
+                    sum += self[i][j]
 
-        # TODO - your code here
+        return sum
+
 
     def inverse(self):
         """
@@ -59,13 +70,14 @@ class Matrix(object):
         if self.h > 2:
             raise(NotImplementedError, "inversion not implemented for matrices larger than 2x2.")
 
-        # TODO - your code here
+        return np.linalg.inv(self)
+
 
     def T(self):
         """
         Returns a transposed copy of this Matrix.
         """
-        # TODO - your code here
+        return np.transpose(self)
 
     def is_square(self):
         return self.h == self.w
@@ -105,9 +117,15 @@ class Matrix(object):
         """
         if self.h != other.h or self.w != other.w:
             raise(ValueError, "Matrices can only be added if the dimensions are the same") 
-        #   
-        # TODO - your code here
-        #
+
+        matrixSum = []
+        row = []
+        for i in range(len(self)):
+            for j in range(len(self[0])):
+                row.append(self[i][j] + other[i][j])
+            matrixSum.append(row)
+            row = []
+        return matrixSum
 
     def __neg__(self):
         """
@@ -121,25 +139,63 @@ class Matrix(object):
           -1.0  -2.0
           -3.0  -4.0
         """
-        #   
-        # TODO - your code here
-        #
+        matrixNeg = []
+        row = []
+        for i in range(len(self)):
+            for j in range(len(self[0])):
+                row.append(-1 * self[i][j])
+            matrixNeg.append(row)
+            row = []
+        return matrixNeg
+
 
     def __sub__(self, other):
         """
         Defines the behavior of - operator (as subtraction)
         """
-        #   
-        # TODO - your code here
-        #
+        matrixSub = []
+        row = []
+        for i in range(len(self)):
+            for j in range(len(self[0])):
+                row.append(self[i][j] - other[i][j])
+            matrixSub.append(row)
+            row = []
+        return matrixSub
+
+    def get_column(self, column_number):
+        column = []
+        for i in range(len(self)):
+            for j in range(len(self[i])):
+                if(j==column_number):
+                    column.append(self[i][j])
+        return column
+
+    def dot_product(self, other):
+        s = 0
+        for i in range(len(self)):
+            s += self[i] * other[i]
+        return s
 
     def __mul__(self, other):
         """
         Defines the behavior of * operator (matrix multiplication)
         """
-        #   
-        # TODO - your code here
-        #
+        m_rows = len(self)
+        p_columns = len(other[0])
+        # empty list that will hold the product of AxB
+        result = []
+        for i in range(m_rows):
+            for j in range(p_columns):
+                currentA = self[i]
+                currentB =  get_column(other, j)
+                dot_result = dot_product(currentA, currentB)
+                row_result = []
+                row_result.append(dot_result)
+            result.append(row_result)
+
+        return result
+
+
 
     def __rmul__(self, other):
         """
@@ -158,4 +214,12 @@ class Matrix(object):
             #   
             # TODO - your code here
             #
+            matrixRmul = []
+            row = []
+            for i in range(len(self)):
+                for j in range(len(self[0])):
+                    row.append(other * self[i][j])
+                matrixRmul.append(row)
+                row = []
+            return matrixRmul
             
