@@ -3,7 +3,6 @@ from math import sqrt
 import numbers
 import numpy as np
 
-
 def zeroes(height, width):
         """
         Creates a matrix of zeroes.
@@ -31,7 +30,7 @@ class Matrix(object):
     #
     # Primary matrix math methods
     #############################
- 
+
     def determinant(self):
         """
         Calculates the determinant of a 1x1 or 2x2 matrix.
@@ -40,11 +39,14 @@ class Matrix(object):
             raise(ValueError, "Cannot calculate determinant of non-square matrix.")
         if self.h > 2:
             raise(NotImplementedError, "Calculating determinant not implemented for matrices largerer than 2x2.")
-        
-        if len(self) == 1:
-            return self[0][0]
-        else:
-            return self[0][0] * self[1][1] - self[0][1] * self[1][0]
+
+        # 1 x 1 Matrix
+        if self.h == 1:
+            return self.g[0]
+
+        # 2 x 2 Matrix:
+        if self.h == 2:
+            return self.g[0][0]*self.g[1][1] - self.g[0][1]*self.g[1][0]
 
     def trace(self):
         """
@@ -53,8 +55,8 @@ class Matrix(object):
         if not self.is_square():
             raise(ValueError, "Cannot calculate the trace of a non-square matrix.")
         sum = 0
-        for i in range(len(self)):
-            for j in range(len(self[0])):
+        for i in range(self.h):
+            for j in range(self.w):
                 if(i == j):
                     sum += self[i][j]
 
@@ -70,14 +72,34 @@ class Matrix(object):
         if self.h > 2:
             raise(NotImplementedError, "inversion not implemented for matrices larger than 2x2.")
 
-        return np.linalg.inv(self)
+        if self.h == 1:
+            if self[0][0] == 0:
+                raise(ValueError, "Value is 0, this matrix does not have an inverse.")
+            else:
+                return Matrix([[1/self[0][0]]])
+        # calculate the inverse of a 2x2 matrix
+        elif self.h == 2:
+            I = identity(self.h)
+            trace = self.trace()
+            deter = self.determinant()
+            # return an error if determinant is 0
+            if deter == 0:
+                raise ValueError('Determinant is 0, this matrix does not have an inverse.')
+            # calculate the inverse of a 2x2 matrix
+            else:
+                return 1.0 / deter * ((trace * I) - self)
 
 
     def T(self):
         """
         Returns a transposed copy of this Matrix.
-        """
-        return np.transpose(self)
+        # """
+        transpose = zeroes(self.w,self.h)
+
+        for i in range(transpose.h):
+            for j in range(transpose.w):
+                transpose[i][j] = self[j][i]
+        return transpose
 
     def is_square(self):
         return self.h == self.w
@@ -116,15 +138,12 @@ class Matrix(object):
         Defines the behavior of the + operator
         """
         if self.h != other.h or self.w != other.w:
-            raise(ValueError, "Matrices can only be added if the dimensions are the same") 
+            raise(ValueError, "Matrices can only be added if the dimensions are the same")
 
-        matrixSum = []
-        row = []
-        for i in range(len(self)):
-            for j in range(len(self[0])):
-                row.append(self[i][j] + other[i][j])
-            matrixSum.append(row)
-            row = []
+        matrixSum = zeroes(self.h, self.w)
+        for i in range(self.h):
+            for j in range(self.w):
+                matrixSum[i][j] = (self[i][j] + other[i][j])
         return matrixSum
 
     def __neg__(self):
@@ -139,13 +158,13 @@ class Matrix(object):
           -1.0  -2.0
           -3.0  -4.0
         """
-        matrixNeg = []
-        row = []
-        for i in range(len(self)):
-            for j in range(len(self[0])):
-                row.append(-1 * self[i][j])
-            matrixNeg.append(row)
-            row = []
+        # creates a self.h x self.w matrix of zeroes
+        grid = zeroes(self.h, self.w)
+
+        matrixNeg = zeroes(self.h, self.w)
+        for i in range(self.h):
+            for j in range(self.w):
+                matrixNeg[i][j] = -1 * self.g[i][j]
         return matrixNeg
 
 
@@ -153,46 +172,21 @@ class Matrix(object):
         """
         Defines the behavior of - operator (as subtraction)
         """
-        matrixSub = []
-        row = []
-        for i in range(len(self)):
-            for j in range(len(self[0])):
-                row.append(self[i][j] - other[i][j])
-            matrixSub.append(row)
-            row = []
-        return matrixSub
-
-    def get_column(self, column_number):
-        column = []
-        for i in range(len(self)):
-            for j in range(len(self[i])):
-                if(j==column_number):
-                    column.append(self[i][j])
-        return column
-
-    def dot_product(self, other):
-        s = 0
-        for i in range(len(self)):
-            s += self[i] * other[i]
-        return s
+        matrixSum = zeroes(self.h, self.w)
+        for i in range(self.h):
+            for j in range(self.w):
+                matrixSum[i][j] = (self[i][j] - other[i][j])
+        return matrixSum
 
     def __mul__(self, other):
         """
         Defines the behavior of * operator (matrix multiplication)
         """
-        m_rows = len(self)
-        p_columns = len(other[0])
-        # empty list that will hold the product of AxB
-        result = []
-        for i in range(m_rows):
-            for j in range(p_columns):
-                currentA = self[i]
-                currentB =  get_column(other, j)
-                dot_result = dot_product(currentA, currentB)
-                row_result = []
-                row_result.append(dot_result)
-            result.append(row_result)
-
+        result = zeroes(self.h, other.w)
+        for i in range(self.h):
+            for j in range(other.w):
+                for k in range(other.h):
+                    result[i][j] += self.g[i][k] * other.g[k][j]
         return result
 
 
@@ -211,15 +205,8 @@ class Matrix(object):
         """
         if isinstance(other, numbers.Number):
             pass
-            #   
-            # TODO - your code here
-            #
-            matrixRmul = []
-            row = []
-            for i in range(len(self)):
-                for j in range(len(self[0])):
-                    row.append(other * self[i][j])
-                matrixRmul.append(row)
-                row = []
-            return matrixRmul
-            
+            for i in range(self.h):
+                for j in range (self.w):
+                    self[i][j] = other * self[i][j]
+            return self
+
