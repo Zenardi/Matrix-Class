@@ -42,7 +42,7 @@ class Matrix(object):
 
         # 1 x 1 Matrix
         if self.h == 1:
-            return self.g[0]
+            return self.g[0][0]
 
         # 2 x 2 Matrix:
         if self.h == 2:
